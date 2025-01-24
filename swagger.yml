@@ -1,0 +1,1040 @@
+openapi: 3.0.0
+info:
+  version: 0.0.1
+  title: Snacker-Tracker-Reporter
+  description: Tracking the snacks at the office
+  contact:
+    name: Laz Mac
+    email: leprechaun@gmail.com
+    url: https://github.com/leprechaun
+  license:
+    name: GNU General Public License v3.0
+    url: https://choosealicense.com/licenses/gpl-3.0/
+
+servers:
+  - url: /v1
+
+tags:
+  - name: scans
+    description: >
+      Scanning barcodes
+  - name: codes
+    description: >
+      Code management
+  - name: stats
+    description: >
+      Get statistics about scans and codes
+  - name: categories
+    description: >
+      Information about the categories of products in the system
+
+x-amazon-apigateway-request-validator: basic
+x-amazon-apigateway-request-validators:
+  basic:
+    validateRequestBody: true
+    validateRequestParameters: true
+
+paths:
+  /scans:
+
+    post:
+      operationId: CreateScan
+      description: |
+        Create a new scan record for a product code
+      tags:
+        - scans
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateScanPayload"
+#         application/x-www-form-urlencoded:
+#           schema:
+#             $ref: "#/components/schemas/CreateScanPayload"
+        required: true
+      responses:
+        "201":
+          description: |
+            Record a scan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+            application/x-amz-json-1.1:
+              schema:
+                $ref: "#/components/schemas/Scan"
+
+        "200":
+          description: |
+            Record a scan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+            application/x-amz-json-1.1:
+              schema:
+                $ref: "#/components/schemas/Scan"
+
+        "500":
+          description: |
+            Record a scan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+            application/x-amz-json-1.1:
+              schema:
+                $ref: "#/components/schemas/Scan"
+      security:
+        - api_key: []
+
+      x-amazon-apigateway-integration:
+        uri: "arn:aws:apigateway:${aws_region}:events:action/PutEvents"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws"
+        credentials: "${integration_role}"
+        requestTemplates:
+          application/json: |
+            #set($context.requestOverride.header['X-Amz-Target'] = "AWSEvents.PutEvents")
+            #set($context.requestOverride.header['Content-Type'] = "application/x-amz-json-1.1")
+
+            #set($data = "{""client_ip"": ""$context.identity.sourceIp"", ""request_id"": ""$context.requestId"", ""payload"": $input.json('$'), ""apiKeyId"": ""$context.identity.apiKeyId""}")
+            {
+                "Entries": [
+                  {
+                    "EventBusName": "${eventbus_name}",
+                    "Source": "Webhook",
+                    "DetailType": "$context.resourcePath",
+                    "Resources": [],
+                    "Detail": "$util.escapeJavaScript($data)"
+                  }
+                ]
+            }
+
+        responses:
+          "200":
+            statusCode: '200'
+            responseTemplates:
+              application/json: $input.json('$.Entries[0]')
+              application/x-amz-json-1.1: $input.json('$.Entries[0]')
+
+#     callbacks:
+#       # the name `onData` is a convenience locator
+#       ScanCreated:
+#         # when data is sent, it will be sent to the `callbackUrl` provided
+#         # when making the subscription PLUS the suffix `/data`
+#         'kinesis':
+#           post:
+#             requestBody:
+#               description: subscription payload
+#               content:
+#                 application/json:
+#                   schema:
+#                     $ref: "#/components/schemas/ScanCreatedEvent"
+#             responses: {}
+
+#   get:
+#     operationId: ListScans
+#     description: |
+#       List all scans, with sorting by date-created, and pagination
+#     tags:
+#       - scans
+#     parameters:
+#       - in: query
+#         name: limit
+#         description: Specify how many records should be returned
+#         schema:
+#           type: integer
+#           format: int64
+#           default: 100
+#       - in: query
+#         name: offset
+#         description: Specify at which point to start paginating
+#         schema:
+#           type: integer
+#           format: int64
+#           default: 0
+#     responses:
+#       "200":
+#         description: |
+#           Return a list of participating products
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/ScanList"
+
+# /scans/{scanId}:
+#   parameters:
+#     - name: scanId
+#       description: Specify the ID of the desired scan
+#       in: path
+#       required: true
+#       schema:
+#         type: string
+#   get:
+#     operationId: GetScan
+#     description: |
+#       Get one specific scan by ID
+#     tags:
+#       - scans
+#     responses:
+#       "200":
+#         description: |
+#           Scan Details
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/Scan"
+#       "404":
+#         description: |
+#           Scan not found
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/ErrorResponse"
+
+#   delete:
+#     operationId: DeleteScan
+#     description: |
+#       Delete a specific scan record from the system
+#     tags:
+#       - scans
+#     responses:
+#       "201":
+#         description: |
+#           Scan Deleted
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/Scan"
+
+
+
+# /stats/scan-counts:
+#   get:
+#     operationId: GetGlobalScanCounts
+#     description: |
+#       Gets the number of scans that happen per time period
+#     tags:
+#       - stats
+#     parameters:
+#       - in: query
+#         name: period
+#         required: false
+#         description: Specify the time period over which to aggregate statistics
+#         schema:
+#           type: string
+#           default: daily
+#           enum:
+#             - daily
+#             - weekdaily
+#             - weekly
+#             - hourly
+
+#     responses:
+#       "200":
+#         description: |
+#           Return the list of scan counts by period
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/GlobalScanCounts"
+
+# /stats/scan-counts/{code}:
+#   get:
+#     operationId: GetCodeScanCounts
+#     tags:
+#       - stats
+#     description: |
+#       Gets the number of scans per time period for a specific code
+#     parameters:
+#       - in: path
+#         name: code
+#         required: true
+#         description: The code for which you are requesting stats
+#         schema:
+#           $ref: "#/components/schemas/UPCCode"
+#       - in: query
+#         name: period
+#         description: Specify the time period over which to aggregate statistics
+#         required: false
+#         schema:
+#           type: string
+#           default: daily
+#           enum:
+#             - daily
+#             - weekdaily
+#             - hourly
+
+#     responses:
+#       "200":
+#         description: |
+#           Return the list of scan counts by period
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/CodeScanCounts"
+
+# /stats/top-scans:
+#   get:
+#     operationId: GetTopScans
+#     description: |
+#       Get the list of top N most popular scanned codes
+#     tags:
+#       - stats
+#     parameters:
+#       - in: query
+#         name: limit
+#         description: Specify how many records should be returned
+#         schema:
+#           type: integer
+#           format: int64
+#           default: 100
+#       - in: query
+#         name: offset
+#         description: Specify at which point to start paginating
+#         schema:
+#           type: integer
+#           format: int64
+#           default: 0
+#       - in: query
+#         description: Specify a start/from date for statistics
+#         name: from_date
+#         schema:
+#           type: string
+#           format: date-time
+#       - in: query
+#         name: to_date
+#         description: Specify an end/to date for statistics
+#         schema:
+#           type: string
+#           format: date-time
+
+#     responses:
+#       "200":
+#         description: |
+#           Return the list of most scanned items
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/TopScanList"
+
+# /codes:
+#   get:
+#     operationId: ListCodes
+#     description: |
+#       List codes known by the system, with sorting, filtering, and pagination
+#     tags:
+#       - codes
+#     parameters:
+#       - in: query
+#         name: limit
+#         description: Specify how many records should be returned
+#         schema:
+#           type: integer
+#           format: int64
+#           default: 100
+#       - in: query
+#         name: offset
+#         description: Specify at which point to start paginating
+#         schema:
+#           type: integer
+#           format: int64
+#           default: 0
+#       - in: query
+#         name: categories
+#         description: Specify the categories of the code being returned
+#         required: false
+#         schema:
+#           $ref: "#/components/schemas/Category"
+
+#     responses:
+#       "200":
+#         description: |
+#           Return a list of participating products
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/CodeList"
+
+#   post:
+#     operationId: CreateCode
+#     description: |
+#       Create a code for a known product with it's attributes
+#     tags:
+#       - codes
+#     requestBody:
+#       content:
+#         application/json:
+#           schema:
+#             $ref: "#/components/schemas/CreateCodePayload"
+#         application/x-www-form-urlencoded:
+#           schema:
+#             $ref: "#/components/schemas/CreateCodePayload"
+
+#       required: true
+#     responses:
+#       "201":
+#         description: |
+#           Create a barcode
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/Code"
+#     callbacks:
+#       # the name `onData` is a convenience locator
+#       CodeCreated:
+#         # when data is sent, it will be sent to the `callbackUrl` provided
+#         # when making the subscription PLUS the suffix `/data`
+#         'kinesis':
+#           post:
+#             requestBody:
+#               description: subscription payload
+#               content:
+#                 application/json:
+#                   schema:
+#                     $ref: "#/components/schemas/CodeCreatedEvent"
+#             responses: {}
+
+# /codes/{code}:
+#   get:
+#     operationId: GetCode
+#     description: |
+#       Get a specific code and it's attributes
+#     tags:
+#       - codes
+#     parameters:
+#       - in: path
+#         name: code
+#         description: The code for which to get data
+#         required: true
+#         schema:
+#           $ref: "#/components/schemas/UPCCode"
+
+#     responses:
+#       "200":
+#         description: |
+#           Get a barcode
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/Code"
+#       "404":
+#         description: |
+#           Barcode not found
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/ErrorResponse"
+
+#   patch:
+#     operationId: PatchCode
+#     description: Update a code with a new set of attributes
+#     tags:
+#       - codes
+#     parameters:
+#       - in: path
+#         name: code
+#         description: The code for which to update date
+#         required: true
+#         schema:
+#           $ref: "#/components/schemas/UPCCode"
+#     requestBody:
+#       content:
+#         application/json:
+#           schema:
+#             $ref: "#/components/schemas/PatchCodePayload"
+#     responses:
+#       "201":
+#         description: |
+#           Update a barcode
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/Code"
+#     callbacks:
+#       # the name `onData` is a convenience locator
+#       CodePatched:
+#         # when data is sent, it will be sent to the `callbackUrl` provided
+#         # when making the subscription PLUS the suffix `/data`
+#         'kinesis':
+#           post:
+#             requestBody:
+#               description: subscription payload
+#               content:
+#                 application/json:
+#                   schema:
+#                     $ref: "#/components/schemas/CodePatchedEvent"
+#             responses: {}
+
+# /codes/{code}/pictures:
+#   get:
+#     operationId: ListCodePictures
+#     description: |
+#       List the pictures that have been uploaded for this code
+#     tags:
+#       - codes
+#     parameters:
+#       - in: path
+#         required: true
+#         name: code
+#         description: The code for which to list pictures
+#         schema:
+#           $ref: "#/components/schemas/UPCCode"
+#     responses:
+#       "200":
+#         description: |
+#           Return a list of pictures for a code
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/CodePictureList"
+#       "404":
+#         description: |
+#           Barcode not found
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/ErrorResponse"
+
+#   post:
+#     operationId: CreateCodePicture
+#     description: |
+#       Upload a picture for a known product code
+#     tags:
+#       - codes
+#     parameters:
+#       - in: path
+#         name: code
+#         description: The code for which to upload a picture
+#         required: true
+#         schema:
+#           $ref: "#/components/schemas/UPCCode"
+#     responses:
+#       "201":
+#         description: |
+#           Picture uploaded
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/CodePicture"
+#     requestBody:
+#       content:
+#         multipart/form-data:
+#           schema:
+#             type: object
+#             properties:
+#               picture:
+#                 type: string
+#                 format: binary
+#     callbacks:
+#       # the name `onData` is a convenience locator
+#       CodePictureCreated:
+#         # when data is sent, it will be sent to the `callbackUrl` provided
+#         # when making the subscription PLUS the suffix `/data`
+#         'kinesis':
+#           post:
+#             requestBody:
+#               description: subscription payload
+#               content:
+#                 application/json:
+#                   schema:
+#                     $ref: "#/components/schemas/CodePictureCreatedEvent"
+#             responses: {}
+
+
+# /categories:
+#   get:
+#     operationId: ListCategories
+#     description: |
+#       List categories known to the system, with sorting, filtering, and pagination
+#     tags:
+#       - categories
+#     parameters:
+#       - in: query
+#         name: limit
+#         description: Specify how many records should be returned
+#         schema:
+#           type: integer
+#           format: int64
+#           default: 100
+#       - in: query
+#         name: offset
+#         description: Specify at which point to start paginating
+#         schema:
+#           type: integer
+#           format: int64
+#           default: 0
+#       - in: query
+#         name: parent
+#         description: Specify this node as a parent for all listed categories
+#         schema:
+#           type: string
+#       - in: query
+#         name: contains
+#         description: Filter categories by names containing this string
+#         schema:
+#           type: string
+#     responses:
+#       "200":
+#         description: |
+#           List of categories
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/CategoriesList"
+
+components:
+  securitySchemes:
+    api_key:
+      type: "apiKey"
+      name: "x-api-key"
+      in: "header"
+
+  schemas:
+    UPCCode:
+      type: string
+      format: upc
+      description: |
+        UPC Code aka barcode
+
+    ScannerLocation:
+      type: string
+      description: |
+        The ID or location of the barcode scanner
+
+    CreateScanPayload:
+      description: |
+        The payload to append a scan event
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - location
+      properties:
+        code:
+          $ref: "#/components/schemas/UPCCode"
+        location:
+          $ref: "#/components/schemas/ScannerLocation"
+        scanned_at:
+          type: string
+          format: date-time
+
+    ScannedAt:
+      type: string
+      format: date-time
+      description: |
+        When the scan event occured, represented in ISO8601
+
+#   CategoriesList:
+#     type: object
+#     additionalProperties: false
+#     properties:
+#       pagination:
+#         $ref: "#/components/schemas/Pagination"
+#       items:
+#         type: array
+#         items:
+#           $ref: "#/components/schemas/CategoryObject"
+
+#   CategoryObject:
+#     type: object
+#     additionalProperties: false
+#     required:
+#       - path
+#       - categories
+#       - count
+#     properties:
+#       path:
+#         type: string
+#       categories:
+#         $ref: "#/components/schemas/CategoryList"
+#       count:
+#         type: number
+#         format: int64
+
+#   Pagination:
+#     type: object
+#     additionalProperties: false
+#     properties:
+#       size:
+#         $ref: "#/components/schemas/PaginationSize"
+#       next:
+#         $ref: "#/components/schemas/PaginationNext"
+
+#   PaginationSize:
+#     type: number
+#     format: int64
+
+#   PaginationNext:
+#     type: string
+
+#   ErrorResponse:
+#     type: object
+#     properties:
+#       message:
+#         type: string
+
+
+#   ScanList:
+#     type: object
+#     additionalProperties: false
+#     required:
+#       - pagination
+#       - items
+#     properties:
+#       pagination:
+#         $ref: "#/components/schemas/Pagination"
+#       items:
+#         type: array
+#         items:
+#           $ref: "#/components/schemas/Scan"
+
+#   Scan:
+#     type: object
+#     additionalProperties: false
+#     required:
+#       - id
+#       - code
+#       - location
+#       - scanned_at
+#       - created_at
+#     properties:
+#       id:
+#         type: string
+#         format: uuid
+#       code:
+#         $ref: "#/components/schemas/UPCCode"
+#       location:
+#         $ref: "#/components/schemas/ScannerLocation"
+#       scanned_at:
+#         type: string
+#         format: date-time
+#       created_at:
+#         type: string
+#         format: date-time
+
+#   Code:
+#     type: object
+#     additionalProperties: false
+#     required:
+#       - code
+#       - name
+#       - created_at
+#       - updated_at
+#     properties:
+#       code:
+#         $ref: "#/components/schemas/UPCCode"
+#       name:
+#         type: string
+#       url:
+#         type: string
+#         nullable: true
+#       created_at:
+#         type: string
+#         format: date-time
+#       updated_at:
+#         type: string
+#         format: date-time
+#       categories:
+#         $ref: "#/components/schemas/CategoryList"
+
+#   CategoryList:
+#     type: array
+#     items:
+#       $ref: "#/components/schemas/Category"
+
+#   Category:
+#     type: string
+
+#   CreateCodePayload:
+#     type: object
+#     additionalProperties: false
+#     required:
+#       - code
+#       - name
+#     properties:
+#       code:
+#         $ref: "#/components/schemas/UPCCode"
+#       name:
+#         type: string
+#       url:
+#         type: string
+#       categories:
+#         $ref: "#/components/schemas/CategoryList"
+
+#   PatchCodePayload:
+#     type: object
+#     additionalProperties: false
+#     properties:
+#       name:
+#         type: string
+#       categories:
+#         $ref: "#/components/schemas/CategoryList"
+
+#   CodeList:
+#     type: object
+#     additionalProperties: false
+#     properties:
+#       pagination:
+#         $ref: "#/components/schemas/Pagination"
+#       items:
+#         type: array
+#         items:
+#           $ref: "#/components/schemas/Code"
+
+#   CodePictureList:
+#     type: object
+#     required:
+#       - items
+#     properties:
+#       pagination:
+#         $ref: "#/components/schemas/Pagination"
+#       items:
+#         type: array
+#         items:
+#           $ref: "#/components/schemas/CodePicture"
+
+#   CodePicture:
+#     type: object
+#     additionalProperties: false
+#     required:
+#       - id
+#       - url
+#       - last_modified
+#       - size
+#     properties:
+#       id:
+#         $ref: "#/components/schemas/CodePictureId"
+#       url:
+#         $ref: "#/components/schemas/CodePictureUrl"
+#       last_modified:
+#         $ref: "#/components/schemas/CodePictureLastModified"
+#       size:
+#         $ref: "#/components/schemas/CodePictureSize"
+
+#   CodePictureId:
+#     type: string
+#     format: sha1
+
+#   CodePictureLastModified:
+#     type: string
+#     format: date-time
+
+#   CodePictureUrl:
+#     type: string
+#     format: url
+
+#   CodePictureSize:
+#     type: number
+#     format: int32
+
+#   GlobalScanCounts:
+#     type: object
+#     required:
+#       - items
+#     properties:
+#       items:
+#         oneOf:
+#           - type: array
+#             items:
+#               $ref: "#/components/schemas/DailyCodeScanCounts"
+#           - type: array
+#             items:
+#               $ref: "#/components/schemas/WeeklyCodeScanCounts"
+#           - type: array
+#             items:
+#               $ref: "#/components/schemas/WeekdailyCodeScanCounts"
+#           - type: array
+#             items:
+#               $ref: "#/components/schemas/HourlyCodeScanCounts"
+
+#   CodeScanCounts:
+#     type: object
+#     required:
+#       - items
+#     properties:
+#       items:
+#         type: array
+#         items:
+#           oneOf:
+#             - $ref: "#/components/schemas/DailyCodeScanCounts"
+#             - $ref: "#/components/schemas/WeekdailyCodeScanCounts"
+#             - $ref: "#/components/schemas/HourlyCodeScanCounts"
+
+#   DailyCodeScanCounts:
+#     type: object
+#     required:
+#       - count
+#       - date
+#     properties:
+#       count:
+#         type: number
+#         format: int64
+#       date:
+#         type: string
+#         format: date
+
+#   HourlyCodeScanCounts:
+#     type: object
+#     required:
+#       - count
+#       - hour
+#     properties:
+#       count:
+#         type: number
+#         format: int64
+#       hour:
+#         type: number
+#         format: int64
+
+#   WeekdailyCodeScanCounts:
+#     type: object
+#     required:
+#       - count
+#       - weekday
+#     properties:
+#       count:
+#         type: number
+#         format: int64
+#       weekday:
+#         type: number
+#         format: int64
+
+#   WeeklyCodeScanCounts:
+#     type: object
+#     required:
+#       - count
+#       - week
+#     properties:
+#       count:
+#         type: number
+#         format: int64
+#       week:
+#         type: string
+
+#   TopScanList:
+#     type: object
+#     required:
+#       - count
+#       - last_scan
+#       - first_scan
+#       - code
+#     properties:
+#       count:
+#         type: number
+#         format: int64
+#       last_scan:
+#         type: string
+#         format: date-time
+#       first_scan:
+#         type: string
+#         format: date-time
+#       code:
+#         $ref: "#/components/schemas/UPCCode"
+
+
+#   EventWrapper:
+#     type: object
+#     required:
+#       - id
+#       - timestamp
+#       - version
+#       - event
+#       - actor
+#     properties:
+#       id:
+#         $ref: "#/components/schemas/EventId"
+#       timestamp:
+#         $ref: "#/components/schemas/EventTimestamp"
+#       version:
+#         $ref: "#/components/schemas/EventVersion"
+#       event:
+#         $ref: "#/components/schemas/EventEvent"
+#       actor:
+#         $ref: "#/components/schemas/EventActor"
+
+#   ScanCreatedEvent:
+#     type: object
+#     allOf:
+#       - $ref: "#/components/schemas/EventWrapper"
+#     required:
+#       - payload
+#     properties:
+#       payload:
+#         $ref: "#/components/schemas/Scan"
+#       event:
+#         type: string
+#         enum:
+#           - ScanCreated
+
+#   CodeCreatedEvent:
+#     type: object
+#     allOf:
+#       - $ref: "#/components/schemas/EventWrapper"
+#     required:
+#       - payload
+#     properties:
+#       payload:
+#         $ref: "#/components/schemas/Code"
+#       event:
+#         type: string
+#         enum:
+#           - CodeCreated
+
+#   CodePatchedEvent:
+#     type: object
+#     allOf:
+#       - $ref: "#/components/schemas/EventWrapper"
+#     required:
+#       - payload
+#     properties:
+#       payload:
+#         $ref: "#/components/schemas/Code"
+#       event:
+#         type: string
+#         enum:
+#           - CodePatched
+
+#   CodePictureCreatedEvent:
+#     type: object
+#     allOf:
+#       - $ref: "#/components/schemas/EventWrapper"
+#     required:
+#       - payload
+#     properties:
+#       payload:
+#         $ref: "#/components/schemas/CodePicture"
+#       event:
+#         type: string
+#         enum:
+#           - CodeCreated
+
+#   EventId:
+#     type: string
+#     format: uuid
+
+#   EventTimestamp:
+#     type: string
+#     format: date-time
+
+#   EventVersion:
+#     type: string
+#     format: semver
+#     description: |
+#       A valid sem-ver string (eg, version of the backend)
+
+#   EventEvent:
+#     type: string
+
+#   EventActor:
+#     type: object
+#     required:
+#       - sub
+#     properties:
+#       sub:
+#         type: string
+#       issuer:
+#         type: string
+#         format: uri

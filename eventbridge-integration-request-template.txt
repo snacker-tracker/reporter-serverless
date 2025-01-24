@@ -1,0 +1,16 @@
+#set($context.requestOverride.header['X-Amz-Target'] = "AWSEvents.PutEvents")
+#set($context.requestOverride.header['Content-Type'] = "application/x-amz-json-1.1")
+
+#set($data = "{""client_ip"": ""$context.identity.sourceIp"", ""request_id"": ""$context.requestId"", ""payload"": $input.json('$')}")
+{
+    "Entries": [
+      {
+        "EventBusName": "${aws_cloudwatch_event_bus.everything.name}",
+        "Source": "Webhook",
+        "DetailType": "$context.resourcePath",
+        "Resources": [],
+        "Detail": "$util.escapeJavaScript($data)"
+      }
+    ]
+}
+
