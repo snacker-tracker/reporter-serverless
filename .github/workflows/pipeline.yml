@@ -18,6 +18,8 @@ jobs:
   deploy-dev:
     runs-on: ubuntu-latest
     environment: dev
+    needs:
+      - build
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
@@ -30,4 +32,4 @@ jobs:
         run: |
           terraform init
           terraform workspace select --or-create dev
-          terraform plan
+          terraform apply --auto-approve
