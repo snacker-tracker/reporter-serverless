@@ -9,6 +9,15 @@ provider "aws" {
   }
 }
 
+terraform {
+  backend "s3" {
+    bucket = "lmacguire-terraform"
+    key    = "snacker-tracker-reporter-serverless"
+    region = "ap-southeast-1"
+  }
+}
+
+
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
