@@ -32,4 +32,4 @@ jobs:
         run: |
           terraform init
           terraform workspace select --or-create dev
-          terraform apply --auto-approve
+          terraform apply --auto-approve --var version=${{ github.run_number }}
