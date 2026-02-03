@@ -5,6 +5,7 @@ provider "aws" {
     tags = {
       Environment = terraform.workspace
       ManagedBy   = "Terraform"
+      Version = var.version
     }
   }
 }

@@ -22,8 +22,8 @@ variable "api_name" {
   default = "snacker-tracker"
 }
 
-variable "image_version" {
-  description = "Version to use when tagging the docker image"
+variable "version" {
+  description = "Version to use as tag"
   type = string
   default = "latest"
 }
