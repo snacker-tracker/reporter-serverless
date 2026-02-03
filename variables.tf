@@ -22,8 +22,8 @@ variable "api_name" {
   default = "snacker-tracker"
 }
 
-variable "version" {
-  description = "Version to use as tag"
+variable "version_label" {
+  description = "Version to tag things with"
   type = string
   default = "latest"
 }
