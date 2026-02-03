@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     needs:
-      - build
+      - deploy-dev
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
