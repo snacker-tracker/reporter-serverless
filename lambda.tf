@@ -87,7 +87,7 @@ resource "aws_lambda_function" "append_to_bronze" {
   function_name = "${var.api_name}-append-to-bronze-${terraform.workspace}"
   role          = aws_iam_role.lambda_execution_role.arn
   package_type  = "Image"
-  image_uri     = "${aws_ecr_repository.append_to_bronze.repository_url}:${var.version_label}-append"
+  image_uri     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.region}.amazonaws.com/snacker-tracker-lambda/append-to-bronze:${var.version_label}-append"
   timeout       = 300
   memory_size   = 1024
 
@@ -102,7 +102,7 @@ resource "aws_lambda_function" "rebuild_bronze" {
   function_name = "${var.api_name}-rebuild-bronze-${terraform.workspace}"
   role          = aws_iam_role.lambda_execution_role.arn
   package_type  = "Image"
-  image_uri     = "${aws_ecr_repository.append_to_bronze.repository_url}:${var.version_label}-rebuild"
+  image_uri     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.region}.amazonaws.com/snacker-tracker-lambda/append-to-bronze:${var.version_label}-rebuild"
   timeout       = 900
   memory_size   = 1024
 
