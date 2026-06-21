@@ -20,7 +20,7 @@ resource "aws_cloudwatch_event_target" "firehose" {
   role_arn = aws_iam_role.eventbridge_delivery_role.arn
 
   dead_letter_config {
-    arn = "arn:aws:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:SQS_QUEUE_NAME"
+    arn = aws_sqs_queue.eventbridge_dlq.arn
   }
 }
 
@@ -54,6 +54,22 @@ resource "aws_iam_role_policy" "eventbridge_delivery_role_policy" {
             "firehose:PutRecord",
         ]
         Resource = [aws_kinesis_firehose_delivery_stream.firehose.arn]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "eventbridge_delivery_role_dlq_policy" {
+  name_prefix = "${var.api_name}-eventbridge-dlq-policy-${terraform.workspace}"
+  role        = aws_iam_role.eventbridge_delivery_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["sqs:SendMessage"]
+        Resource = [aws_sqs_queue.eventbridge_dlq.arn]
       }
     ]
   })

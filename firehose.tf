@@ -68,6 +68,18 @@ resource "aws_s3_bucket" "firehose-destination" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_notification" "firehose_destination" {
+  bucket = aws_s3_bucket.firehose-destination.id
+
+  queue {
+    queue_arn     = aws_sqs_queue.s3_to_lambda.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "raw/"
+  }
+
+  depends_on = [aws_sqs_queue_policy.s3_to_lambda]
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "firehose" {
   name        = "${var.api_name}-${terraform.workspace}"
   destination = "extended_s3"
