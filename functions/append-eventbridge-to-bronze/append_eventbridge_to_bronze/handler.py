@@ -99,8 +99,11 @@ class RebuildOrAppendToBronze:
     def cast(self, df):
         return df.with_columns(
             pl.col("time").str.to_datetime(time_zone='UTC'),
-            # This fails because it creates a new column at the root, instead of altering the value in the struct
-            #pl.col("detail").struct['payload'].struct['scanned_at'].str.to_datetime(time_zone='UTC')
+            pl.col("detail").struct.with_fields(
+                pl.field("payload").struct.with_fields(
+                    pl.field("scanned_at").str.to_datetime(time_zone='UTC')
+                )
+            )
         )
 
     def write(self, df, mode):
