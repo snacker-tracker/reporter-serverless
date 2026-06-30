@@ -8,17 +8,11 @@ resource "aws_api_gateway_rest_api" "api" {
 
   #put_rest_api_mode = "merge"
 
-  body = "${data.template_file.codingtips_api_swagger.rendered}"
-}
-
-data "template_file" "codingtips_api_swagger" {
-  template = "${file("./swagger.yml")}"
-
-  vars = {
-    aws_region = data.aws_region.current.region
-    eventbus_name = aws_cloudwatch_event_bus.everything.name
+  body = templatefile("${path.module}/swagger.yml", {
+    aws_region       = data.aws_region.current.region
+    eventbus_name    = aws_cloudwatch_event_bus.everything.name
     integration_role = aws_iam_role.api_gateway_firehose_role.arn
-  }
+  })
 }
 
 
@@ -160,7 +154,7 @@ resource "aws_acm_certificate_validation" "cert_validation" {
 
 resource "aws_api_gateway_usage_plan" "event_api" {
   name         = "${var.api_name}-${terraform.workspace}"
-  description  = "my description"
+  description  = "Rate limiting and quota for the snacker-tracker scan API"
   product_code = "${var.api_name}-${terraform.workspace}"
 
   api_stages {
