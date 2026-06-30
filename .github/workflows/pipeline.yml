@@ -67,6 +67,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          terraform init
+          terraform init --upgrade
           terraform workspace select --or-create prod
           terraform apply --auto-approve --var version_label=${{ github.run_number }} --var domain=reporter.khanom.xyz
