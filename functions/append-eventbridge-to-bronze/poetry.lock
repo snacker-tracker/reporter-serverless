@@ -89,19 +89,18 @@ files = [
 
 [[package]]
 name = "deltalake"
-version = "1.4.1"
+version = "1.6.1"
 description = "Native Delta Lake Python binding based on delta-rs with Pandas integration"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "deltalake-1.4.1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:dc7b6b99bd8a8d4949645b8f6073d0ced9dd06109fa9669b7802ddf8207291e1"},
-    {file = "deltalake-1.4.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:0d4c460a4fab802cf051ca66a49583d93a3490842eb849bd1aae7176b12b8030"},
-    {file = "deltalake-1.4.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bcd312abe5928f0da3217901431f6f537da4d51162d23cd81fc3849559c5f5cc"},
-    {file = "deltalake-1.4.1-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:cc98a04918d0acd0a425ecaf33b6fbbbe458d395da31139554b97b7a62a045f9"},
-    {file = "deltalake-1.4.1-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:9a3af28f14535122395b89ff146c5acca4c00db63191c59c39a0ae30356030b6"},
-    {file = "deltalake-1.4.1-cp310-abi3-win_amd64.whl", hash = "sha256:4dd4648be88375b5dadd119cd2a45f481e3df6007da6a519d49646f202b036da"},
-    {file = "deltalake-1.4.1.tar.gz", hash = "sha256:0a7e7f2f0f60edab087087f0144e539428c8d5a0e6f80f86fe49db82499a50ab"},
+    {file = "deltalake-1.6.1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:f5f22371ed5ac3977839d7a09c0a9ccdbbdac79437bbb977f6b57c7c35d7fa34"},
+    {file = "deltalake-1.6.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:e0bd4f3bbc9a53e53c103d6733f09b1538a75e7e69b5ecbca9a865f68bd70656"},
+    {file = "deltalake-1.6.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:46a13abc2d7abc072375faeb718443be61ec1162d1708b1c67a76aff4e0187a5"},
+    {file = "deltalake-1.6.1-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:d5ba7bbea9d61948ba7caaaa1562bb9997bdf2398ba30d60e99006451098fb01"},
+    {file = "deltalake-1.6.1-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:89c68fef155215a2e8cd7d93762cadc3be99d6aa42486a30e88a236b4edc7140"},
+    {file = "deltalake-1.6.1-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:91d8c064ce04cdd06bbdd66614df7050c1082871ca60054cc5b5074d0e3fc345"},
 ]
 
 [package.dependencies]
@@ -110,7 +109,7 @@ deprecated = ">=1.2.18"
 
 [package.extras]
 pandas = ["pandas"]
-pyarrow = ["pyarrow (>=16)"]
+pyarrow = ["pyarrow (>=21)"]
 
 [[package]]
 name = "deprecated"
