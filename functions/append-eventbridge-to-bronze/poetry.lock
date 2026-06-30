@@ -156,14 +156,14 @@ files = [
 
 [[package]]
 name = "pandera"
-version = "0.29.0"
+version = "0.32.1"
 description = "A light-weight and flexible data validation and testing tool for statistical data objects."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "pandera-0.29.0-py3-none-any.whl", hash = "sha256:b3b25d6c00d7c100fbab96aff0e81e52d3dae543a880d24135cca705fa97c516"},
-    {file = "pandera-0.29.0.tar.gz", hash = "sha256:06bc4fc1e4ff02534dd44482a9bc704fb2e58fe3fbb11be906aa714f7f5ec801"},
+    {file = "pandera-0.32.1-py3-none-any.whl", hash = "sha256:1a17a3ffa906174d19207715f4f082ec3db3709647927ad8c095c147d74d8454"},
+    {file = "pandera-0.32.1.tar.gz", hash = "sha256:72ecd74226847abf0f0437c05f7f10cc8368e306d88a2acc78fa93762c5a0a02"},
 ]
 
 [package.dependencies]
@@ -175,22 +175,24 @@ typing_extensions = "*"
 typing_inspect = ">=0.6.0"
 
 [package.extras]
-all = ["black", "dask[dataframe]", "distributed", "fastapi", "frictionless (<=4.40.8)", "geopandas (<1.1.0)", "hypothesis (>=6.92.7)", "ibis-framework (>=9.0.0)", "modin", "pandas-stubs", "polars (>=0.20.0)", "pyspark[connect] (>=3.2.0)", "pyyaml (>=5.1)", "ray", "scipy", "scipy-stubs ; python_version >= \"3.10\"", "shapely"]
+all = ["black", "dask[dataframe]", "distributed", "fastapi", "frictionless (<=4.40.8)", "geopandas", "hypothesis (>=6.92.7)", "ibis-framework (>=9.0.0)", "modin", "narwhals (>=1.26.0)", "numpy (>=1.24.4)", "pandas-stubs", "polars (>=0.20.0)", "pyarrow-hotfix", "pyspark[connect] (>=3.2.0)", "pyyaml (>=5.1)", "ray", "scipy", "scipy-stubs ; python_version >= \"3.10\"", "shapely", "xarray (>=2024.10.0)"]
 dask = ["dask[dataframe]", "distributed"]
 fastapi = ["fastapi"]
 frictionless = ["frictionless (<=4.40.8)"]
-geopandas = ["geopandas (<1.1.0)", "shapely"]
+geopandas = ["geopandas", "shapely"]
 hypotheses = ["scipy"]
-ibis = ["ibis-framework (>=9.0.0)"]
+ibis = ["ibis-framework (>=9.0.0)", "pyarrow-hotfix"]
 io = ["pyyaml (>=5.1)"]
 modin = ["dask[dataframe]", "distributed", "modin", "ray"]
 modin-dask = ["dask[dataframe]", "distributed", "modin"]
 modin-ray = ["modin", "ray"]
 mypy = ["pandas-stubs", "scipy-stubs ; python_version >= \"3.10\""]
+narwhals = ["narwhals (>=1.26.0)"]
 pandas = ["numpy (>=1.24.4)", "pandas (>=2.1.1)"]
 polars = ["polars (>=0.20.0)"]
 pyspark = ["pyspark[connect] (>=3.2.0)"]
 strategies = ["hypothesis (>=6.92.7)"]
+xarray = ["numpy (>=1.24.4)", "xarray (>=2024.10.0)"]
 
 [[package]]
 name = "polars"
@@ -559,4 +561,4 @@ dev = ["pytest", "setuptools"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "bea7d2936b2e824454be6184fede5da32f61dfa41cec4b23cdf388a4c491c7ca"
+content-hash = "be4c1efb15843878b5fe986d895e7091a5056a7862bb13ab2b435925a504a202"
