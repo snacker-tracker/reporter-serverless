@@ -6,7 +6,7 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry export -f requirements.txt --without-hashes --output requirements.txt
 
 
-FROM public.ecr.aws/lambda/python:3.14 AS base
+FROM public.ecr.aws/lambda/python:3.15 AS base
 
 COPY --from=deps /build/requirements.txt .
 RUN pip install -r requirements.txt --target ${LAMBDA_TASK_ROOT}
