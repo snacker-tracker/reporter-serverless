@@ -18,6 +18,10 @@ jobs:
           uv sync --all-groups
           uv run ruff check
 
+      - name: Run tests
+        working-directory: functions/append-eventbridge-to-bronze
+        run: uv run pytest tests/ -v
+
   build:
     runs-on: ubuntu-latest
     needs:
