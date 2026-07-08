@@ -1,19 +1,18 @@
 import logging
 import os
-import boto3
 import json
-from urllib.parse import unquote
 import polars as pl
 import tempfile
 import datetime
 import sys
 
-temp_dir = tempfile.mkdtemp(dir="/tmp")
-os.environ["POLARS_TEMP_DIR"] = temp_dir
-#logging.basicConfig(level=logging.DEBUG)
+def _setup_polars_tmp():
+    temp_dir = tempfile.mkdtemp(dir="/tmp")
+    os.environ["POLARS_TEMP_DIR"] = temp_dir
+
+_setup_polars_tmp()
 
 for handler in logging.root.handlers[:]:
-    logging.info(f"Remove handler: {handler}")
     logging.root.removeHandler(handler)
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
@@ -35,11 +34,11 @@ class S3PutObjectParser:
                 yield f"s3://{s3_record['s3']['bucket']['name']}/{s3_record['s3']['object']['key']}"
 
 class RebuildOrAppendToBronze:
-    def __init__(self, s3_client, logger):
-        self.s3_client = s3_client
+    def __init__(self, logger):
         self.logger = logger
 
-    def input_schema(self):
+    @staticmethod
+    def input_schema():
         return pl.Schema({
             'version': pl.String,
             'id': pl.String,
@@ -63,7 +62,7 @@ class RebuildOrAppendToBronze:
 
     def read(self, paths):
         self.logger.info(f"going to read: {paths}")
-        return pl.read_ndjson(paths, schema = self.input_schema())
+        return pl.read_ndjson(paths, schema=self.input_schema())
 
     def append(self, paths):
         return self.run(paths, "append")
@@ -106,31 +105,14 @@ class RebuildOrAppendToBronze:
         self.logger.info(f"Going to write {path}, mode={mode}")
         df.write_delta(path, mode=mode)
 
-def get_handler_object(event, context):
-    logger = logging.getLogger(RebuildOrAppendToBronze.__name__)
-
-    s3_client = boto3.client('s3', region_name="ap-southeast-1")
-
-    return RebuildOrAppendToBronze(s3_client, logger)
-
 def append_to_bronze(event, context):
-    l = logging.getLogger("append_to_bronze")
-    l.info(event)
+    logger = logging.getLogger(RebuildOrAppendToBronze.__name__)
+    logger.info(event)
 
-    logger = logging.getLogger(S3PutObjectParser.__name__)
-    parser = S3PutObjectParser(logger)
-
-    handler = get_handler_object(event, context)
+    parser = S3PutObjectParser(logging.getLogger(S3PutObjectParser.__name__))
+    handler = RebuildOrAppendToBronze(logger)
     return handler.append(list(parser.objects(event, context)))
 
 def rebuild_bronze(event, context):
-    handler = get_handler_object(event, context)
+    handler = RebuildOrAppendToBronze(logging.getLogger(RebuildOrAppendToBronze.__name__))
     return handler.rebuild([f"s3://{os.environ['BRONZE_BUCKET']}/raw/**/*"])
-
-"""
-def __main__():
-    rebuild_bronze(json.load(open("event.json")), {})
-
-if __name__ == '__main__':
-    __main__()
-"""
