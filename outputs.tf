@@ -15,5 +15,5 @@ output "api_gateway_root_resource_id" {
 
 output "api_gateway_endpoint" {
   description = "The endpoint URL of the API Gateway"
-  value       = aws_api_gateway_rest_api.api.id
+  value       = aws_api_gateway_stage.stage.invoke_url
 }
