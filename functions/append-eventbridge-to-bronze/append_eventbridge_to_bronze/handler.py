@@ -72,8 +72,6 @@ class RebuildOrAppendToBronze:
         return self.run(paths, "overwrite")
 
     def run(self, paths, write_mode):
-        print("running!")
-        print((paths, write_mode))
         df = self.read(paths)
         original_shape = df.shape
         self.logger.info(f"Read DF: {original_shape}")
@@ -87,9 +85,6 @@ class RebuildOrAppendToBronze:
             raise Exception("Shape is no longer the same after casting")
 
         self.write(df, write_mode)
-
-        print(df.shape)
-        print("Done!")
 
         return {
             "statusCode": 200,
