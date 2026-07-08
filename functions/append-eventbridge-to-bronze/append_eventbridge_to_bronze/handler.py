@@ -16,7 +16,7 @@ for handler in logging.root.handlers[:]:
     logging.info(f"Remove handler: {handler}")
     logging.root.removeHandler(handler)
 
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 class S3PutObjectParser:
     def __init__(self, logger):
