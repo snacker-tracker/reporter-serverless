@@ -1,15 +1,18 @@
 FROM python:3.14-slim AS deps
 
-RUN pip install poetry poetry-plugin-export
+RUN pip install uv
 WORKDIR /build
-COPY pyproject.toml poetry.lock ./
-RUN poetry export -f requirements.txt --without-hashes --output requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv export --frozen --no-hashes -o requirements.txt
 
 
 FROM public.ecr.aws/lambda/python:3.14 AS base
 
-COPY --from=deps /build/requirements.txt .
-RUN pip install -r requirements.txt --target ${LAMBDA_TASK_ROOT}
+RUN pip install uv
+
+COPY pyproject.toml uv.lock ./
+RUN uv pip install --target ${LAMBDA_TASK_ROOT} -r pyproject.toml
+
 COPY ./append_eventbridge_to_bronze ${LAMBDA_TASK_ROOT}/append_eventbridge_to_bronze
 
 

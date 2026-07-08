@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+uv pip install --upgrade -t package dist/*.whl
+
+cd package || exit 1
+zip -r ../../append-eventbridge-to-bronze.zip . -x '*.pyc'
+cd ../
