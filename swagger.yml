@@ -27,6 +27,9 @@ tags:
   - name: categories
     description: >
       Information about the categories of products in the system
+  - name: heartbeat
+    description: >
+      Liveness pings from scanner devices
 
 x-amazon-apigateway-request-validator: basic
 x-amazon-apigateway-request-validators:
@@ -118,6 +121,86 @@ paths:
               application/json: $input.json('$.Entries[0]')
               application/x-amz-json-1.1: $input.json('$.Entries[0]')
 
+  /heartbeat:
+    post:
+      operationId: CreateHeartbeat
+      description: |
+        Record a liveness ping from a scanner device
+      tags:
+        - heartbeat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHeartbeatPayload"
+        required: true
+      responses:
+        "201":
+          description: |
+            Record a heartbeat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Heartbeat"
+            application/x-amz-json-1.1:
+              schema:
+                $ref: "#/components/schemas/Heartbeat"
+
+        "200":
+          description: |
+            Record a heartbeat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Heartbeat"
+            application/x-amz-json-1.1:
+              schema:
+                $ref: "#/components/schemas/Heartbeat"
+
+        "500":
+          description: |
+            Record a heartbeat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Heartbeat"
+            application/x-amz-json-1.1:
+              schema:
+                $ref: "#/components/schemas/Heartbeat"
+      security:
+        - api_key: []
+
+      x-amazon-apigateway-integration:
+        uri: "arn:aws:apigateway:${aws_region}:events:action/PutEvents"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws"
+        credentials: "${integration_role}"
+        requestTemplates:
+          application/json: |
+            #set($context.requestOverride.header['X-Amz-Target'] = "AWSEvents.PutEvents")
+            #set($context.requestOverride.header['Content-Type'] = "application/x-amz-json-1.1")
+
+            #set($data = "{""client_ip"": ""$context.identity.sourceIp"", ""request_id"": ""$context.requestId"", ""payload"": $input.json('$'), ""apiKeyId"": ""$context.identity.apiKeyId""}")
+            {
+                "Entries": [
+                  {
+                    "EventBusName": "${eventbus_name}",
+                    "Source": "Webhook",
+                    "DetailType": "$context.resourcePath",
+                    "Resources": [],
+                    "Detail": "$util.escapeJavaScript($data)"
+                  }
+                ]
+            }
+
+        responses:
+          "200":
+            statusCode: '200'
+            responseTemplates:
+              application/json: $input.json('$.Entries[0]')
+              application/x-amz-json-1.1: $input.json('$.Entries[0]')
+
 components:
   securitySchemes:
     api_key:
@@ -159,3 +242,38 @@ components:
       format: date-time
       description: |
         When the scan event occured, represented in ISO8601
+
+    CreateHeartbeatPayload:
+      description: |
+        The payload to record a scanner device liveness ping
+      type: object
+      additionalProperties: false
+      required:
+        - location
+        - version
+        - uptime
+      properties:
+        location:
+          $ref: "#/components/schemas/ScannerLocation"
+        version:
+          type: string
+          description: |
+            The version of the software/firmware running on the scanner device
+        uptime:
+          type: integer
+          format: int64
+          description: |
+            The number of seconds the scanner device has been running since its last restart
+
+    Heartbeat:
+      description: |
+        A recorded scanner device liveness ping
+      type: object
+      properties:
+        location:
+          $ref: "#/components/schemas/ScannerLocation"
+        version:
+          type: string
+        uptime:
+          type: integer
+          format: int64
