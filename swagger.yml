@@ -106,8 +106,8 @@ paths:
                 "Entries": [
                   {
                     "EventBusName": "${eventbus_name}",
-                    "Source": "Webhook",
-                    "DetailType": "$context.resourcePath",
+                    "Source": "scanner",
+                    "DetailType": "scans",
                     "Resources": [],
                     "Detail": "$util.escapeJavaScript($data)"
                   }
@@ -186,8 +186,8 @@ paths:
                 "Entries": [
                   {
                     "EventBusName": "${eventbus_name}",
-                    "Source": "Webhook",
-                    "DetailType": "$context.resourcePath",
+                    "Source": "scanner",
+                    "DetailType": "heartbeats",
                     "Resources": [],
                     "Detail": "$util.escapeJavaScript($data)"
                   }
