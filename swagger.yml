@@ -250,11 +250,16 @@ components:
       additionalProperties: false
       required:
         - location
+        - device_name
         - version
         - uptime
       properties:
         location:
           $ref: "#/components/schemas/ScannerLocation"
+        device_name:
+          type: string
+          description: |
+            The name/identifier of the scanner device
         version:
           type: string
           description: |
@@ -272,6 +277,8 @@ components:
       properties:
         location:
           $ref: "#/components/schemas/ScannerLocation"
+        device_name:
+          type: string
         version:
           type: string
         uptime:
