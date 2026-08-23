@@ -13,7 +13,7 @@ variable "domain" {
 variable "zone_id" {
   description = "zone ID under which domain sits"
   type = string
-  default = "Z015639717HE01PZZ2H3K"
+  default = "Z0781732PCOBWRVFR9YS"
 }
 
 variable "api_name" {
