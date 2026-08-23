@@ -35,7 +35,7 @@ resource "aws_iam_role" "api_gateway_firehose_role" {
 
 resource "aws_iam_role_policy" "api_gateway_firehose_policy" {
   name_prefix = "${var.api_name}-api-gateway-firehose-policy-${terraform.workspace}"
-  role = aws_iam_role.api_gateway_firehose_role.id
+  role        = aws_iam_role.api_gateway_firehose_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"

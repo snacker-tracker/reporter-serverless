@@ -3,20 +3,20 @@ resource "aws_cloudwatch_event_bus" "everything" {
 }
 
 resource "aws_cloudwatch_event_rule" "everything" {
-  name        = "${var.api_name}-capture-everything-${terraform.workspace}"
-  description = "I really want everything"
+  name           = "${var.api_name}-capture-everything-${terraform.workspace}"
+  description    = "I really want everything"
   event_bus_name = aws_cloudwatch_event_bus.everything.name
 
   event_pattern = jsonencode({
-    "account": [data.aws_caller_identity.current.account_id]
+    "account" : [data.aws_caller_identity.current.account_id]
   })
 }
 
 resource "aws_cloudwatch_event_target" "firehose" {
   event_bus_name = aws_cloudwatch_event_bus.everything.name
-  rule      = aws_cloudwatch_event_rule.everything.name
+  rule           = aws_cloudwatch_event_rule.everything.name
   #target_id = "ToFirehose"
-  arn       = aws_kinesis_firehose_delivery_stream.firehose.arn
+  arn      = aws_kinesis_firehose_delivery_stream.firehose.arn
   role_arn = aws_iam_role.eventbridge_delivery_role.arn
 
   dead_letter_config {
@@ -43,7 +43,7 @@ resource "aws_iam_role" "eventbridge_delivery_role" {
 
 resource "aws_iam_role_policy" "eventbridge_delivery_role_policy" {
   name_prefix = "${var.api_name}-eventbridge-delivery-role-policy-${terraform.workspace}"
-  role = aws_iam_role.eventbridge_delivery_role.id
+  role        = aws_iam_role.eventbridge_delivery_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -51,7 +51,7 @@ resource "aws_iam_role_policy" "eventbridge_delivery_role_policy" {
       {
         Effect = "Allow"
         Action = [
-            "firehose:PutRecord",
+          "firehose:PutRecord",
         ]
         Resource = [aws_kinesis_firehose_delivery_stream.firehose.arn]
       }
@@ -78,7 +78,7 @@ resource "aws_iam_role_policy" "eventbridge_delivery_role_dlq_policy" {
 # Expanded Firehose IAM role to allow more actions
 resource "aws_iam_role_policy" "eventbridge_delivery_role_extended_policy" {
   name_prefix = "${var.api_name}-firehose-extended-policy-${terraform.workspace}"
-  role = aws_iam_role.eventbridge_delivery_role.id
+  role        = aws_iam_role.eventbridge_delivery_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"

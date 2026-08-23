@@ -3,12 +3,12 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Repository = "git@github.com:snacker-tracker/reporter-serverless.git"
-      Project = "snacker-tracker"
-      Component = "reporter-serverless"
+      Repository  = "git@github.com:snacker-tracker/reporter-serverless.git"
+      Project     = "snacker-tracker"
+      Component   = "reporter-serverless"
       Environment = terraform.workspace
       ManagedBy   = "Terraform"
-      Version = var.version_label
+      Version     = var.version_label
     }
   }
 }
@@ -28,12 +28,12 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Repository = "git@github.com:snacker-tracker/reporter-serverless.git"
-      Project = "snacker-tracker"
-      Component = "reporter-serverless"
+      Repository  = "git@github.com:snacker-tracker/reporter-serverless.git"
+      Project     = "snacker-tracker"
+      Component   = "reporter-serverless"
       Environment = terraform.workspace
       ManagedBy   = "Terraform"
-      Version = var.version_label
+      Version     = var.version_label
     }
   }
 }

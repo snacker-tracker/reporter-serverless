@@ -17,7 +17,7 @@ resource "aws_iam_role" "firehose_role" {
 
 resource "aws_iam_role_policy" "firehose_s3_policy" {
   name_prefix = "firehose-s3-policy-${terraform.workspace}"
-  role = aws_iam_role.firehose_role.id
+  role        = aws_iam_role.firehose_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -44,7 +44,7 @@ resource "aws_iam_role_policy" "firehose_s3_policy" {
 # Expanded Firehose IAM role to allow more actions
 resource "aws_iam_role_policy" "firehose_extended_policy" {
   name_prefix = "firehose-extended-policy-${terraform.workspace}"
-  role = aws_iam_role.firehose_role.id
+  role        = aws_iam_role.firehose_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
