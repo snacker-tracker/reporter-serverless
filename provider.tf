@@ -13,7 +13,7 @@ provider "aws" {
 terraform {
   backend "s3" {
     bucket = "snacker-tracker-aws-infra-tfstate"
-    key    = "reporter-serverless"
+    key    = "snacker-tracker-reporter-serverless"
     region = "ap-southeast-1"
   }
 }
