@@ -6,7 +6,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv export --frozen --no-hashes -o requirements.txt
 
 
-FROM public.ecr.aws/lambda/python:3.15 AS base
+FROM public.ecr.aws/lambda/python:3.14 AS base
 
 RUN pip install uv
 
