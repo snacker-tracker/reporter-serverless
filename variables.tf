@@ -7,7 +7,7 @@ variable "project_description" {
 variable "domain" {
   description = "hostname of the API"
   type        = string
-  default     = "reporter.khanom.xyz"
+  default     = "reporter-latest.khanom.xyz"
 }
 
 variable "zone_id" {
