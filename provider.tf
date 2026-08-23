@@ -12,8 +12,8 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket = "lmacguire-terraform"
-    key    = "snacker-tracker-reporter-serverless"
+    bucket = "snacker-tracker-aws-infra-tfstate"
+    key    = "reporter-serverless"
     region = "ap-southeast-1"
   }
 }
