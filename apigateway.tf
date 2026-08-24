@@ -175,7 +175,7 @@ resource "aws_api_gateway_usage_plan" "event_api" {
 }
 
 resource "aws_api_gateway_api_key" "bangkok-office" {
-  name = "bangkok-office"
+  name = "bangkok-office-${terraform.workspace}"
 }
 
 resource "aws_api_gateway_usage_plan_key" "bangkok-office" {
