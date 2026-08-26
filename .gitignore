@@ -1,0 +1,7 @@
+.aider*
+.env
+.terraform
+functions/tmp/
+functions/*zip
+functions/*/package/
+functions/*/dist/
