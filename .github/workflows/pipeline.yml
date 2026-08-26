@@ -54,17 +54,15 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push Lambda images
+      - name: Build and push Lambda image
         working-directory: functions/append-eventbridge-to-bronze
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPO: snacker-tracker-lambda/append-to-bronze
           VERSION: ${{ github.run_number }}
         run: |
-          docker build --target append-to-bronze -t $REGISTRY/$REPO:$VERSION-append .
-          docker build --target rebuild-bronze -t $REGISTRY/$REPO:$VERSION-rebuild .
-          docker push $REGISTRY/$REPO:$VERSION-append
-          docker push $REGISTRY/$REPO:$VERSION-rebuild
+          docker build -t $REGISTRY/$REPO:$VERSION .
+          docker push $REGISTRY/$REPO:$VERSION
 
   deploy-dev:
     runs-on: ubuntu-latest
