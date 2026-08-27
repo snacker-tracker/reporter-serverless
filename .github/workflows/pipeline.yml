@@ -16,7 +16,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: "1.15.0"
+          terraform_version: "1.16.0"
 
       - name: Check terraform formatting
         run: terraform fmt -check -recursive
@@ -79,7 +79,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: "1.15.0"
+          terraform_version: "1.16.0"
       - name: Apply
         run: |
           terraform init
@@ -100,7 +100,7 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
       - uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: "1.15.0"
+          terraform_version: "1.16.0"
       - name: Apply
         run: |
           terraform init
