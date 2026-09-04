@@ -74,7 +74,7 @@ resource "aws_s3_bucket_notification" "firehose_destination" {
   queue {
     queue_arn     = aws_sqs_queue.s3_to_lambda.arn
     events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "raw/"
+    filter_prefix = "raw/data/scanner/scans/"
   }
 
   depends_on = [aws_sqs_queue_policy.s3_to_lambda]
