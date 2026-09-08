@@ -243,100 +243,130 @@ components:
       description: |
         When the scan event occured, represented in ISO8601
 
+    ScannerDeviceInfo:
+      description: |
+        Identity of the scanner device sending the heartbeat
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - location
+      properties:
+        id:
+          type: string
+          description: |
+            The hardware serial number of the scanner device
+        name:
+          type: string
+          description: |
+            The name/identifier of the scanner device
+        location:
+          $ref: "#/components/schemas/ScannerLocation"
+        board:
+          type: string
+          description: |
+            The model of the microcontroller board the scanner device runs on
+
+    ScannerAppInfo:
+      description: |
+        The application running on the scanner device
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        name:
+          type: string
+          description: |
+            The name of the application running on the scanner device
+        version:
+          type: string
+          description: |
+            The version of the application running on the scanner device
+
+    ScannerPlatformInfo:
+      description: |
+        The runtime platform the scanner device's application runs on
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: |
+            The name of the runtime/firmware platform, e.g. "micropython"
+        version:
+          type: string
+          description: |
+            The version of the runtime/firmware platform
+
+    ScannerTelemetry:
+      description: |
+        Diagnostic data reported by the scanner device
+      type: object
+      additionalProperties: false
+      required:
+        - uptime
+      properties:
+        uptime:
+          type: integer
+          format: int64
+          description: |
+            The number of seconds the scanner device has been running since its last restart
+        mem_free:
+          type: integer
+          format: int64
+          description: |
+            Free heap memory on the device, in bytes
+        reset_cause:
+          type: string
+          description: |
+            The reason the device last reset/rebooted
+        wifi_ssid:
+          type: string
+          description: |
+            The SSID of the WiFi network the device is connected to
+        wifi_rssi:
+          type: integer
+          format: int32
+          description: |
+            WiFi signal strength, in dBm
+
     CreateHeartbeatPayload:
       description: |
         The payload to record a scanner device liveness ping
       type: object
       additionalProperties: false
       required:
-        - location
-        - device_name
-        - version
-        - uptime
+        - schema_version
+        - device
+        - app
+        - telemetry
       properties:
-        location:
-          $ref: "#/components/schemas/ScannerLocation"
-        device_name:
-          type: string
-          description: |
-            The name/identifier of the scanner device
-        version:
-          type: string
-          description: |
-            The version of the software/firmware running on the scanner device
-        uptime:
+        schema_version:
           type: integer
-          format: int64
           description: |
-            The number of seconds the scanner device has been running since its last restart
+            The version of this heartbeat payload's shape
+        device:
+          $ref: "#/components/schemas/ScannerDeviceInfo"
+        app:
+          $ref: "#/components/schemas/ScannerAppInfo"
+        platform:
+          $ref: "#/components/schemas/ScannerPlatformInfo"
         telemetry:
-          type: object
-          additionalProperties: false
-          description: |
-            Diagnostic data reported by the scanner device
-          properties:
-            mem_free:
-              type: integer
-              format: int64
-              description: |
-                Free heap memory on the device, in bytes
-            wifi_rssi:
-              type: integer
-              format: int32
-              description: |
-                WiFi signal strength, in dBm
-            reset_cause:
-              type: string
-              description: |
-                The reason the device last reset/rebooted
-            wifi_ssid:
-              type: string
-              description: |
-                The SSID of the WiFi network the device is connected to
-        board_model:
-          type: string
-          description: |
-            The model of the microcontroller board the scanner device runs on
-        micropython_version:
-          type: string
-          description: |
-            The version of MicroPython running on the scanner device
-        serial_number:
-          type: string
-          description: |
-            The hardware serial number of the scanner device
+          $ref: "#/components/schemas/ScannerTelemetry"
 
     Heartbeat:
       description: |
         A recorded scanner device liveness ping
       type: object
       properties:
-        location:
-          $ref: "#/components/schemas/ScannerLocation"
-        device_name:
-          type: string
-        version:
-          type: string
-        uptime:
+        schema_version:
           type: integer
-          format: int64
+        device:
+          $ref: "#/components/schemas/ScannerDeviceInfo"
+        app:
+          $ref: "#/components/schemas/ScannerAppInfo"
+        platform:
+          $ref: "#/components/schemas/ScannerPlatformInfo"
         telemetry:
-          type: object
-          additionalProperties: false
-          properties:
-            mem_free:
-              type: integer
-              format: int64
-            wifi_rssi:
-              type: integer
-              format: int32
-            reset_cause:
-              type: string
-            wifi_ssid:
-              type: string
-        board_model:
-          type: string
-        micropython_version:
-          type: string
-        serial_number:
-          type: string
+          $ref: "#/components/schemas/ScannerTelemetry"
