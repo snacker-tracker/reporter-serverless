@@ -269,6 +269,42 @@ components:
           format: int64
           description: |
             The number of seconds the scanner device has been running since its last restart
+        telemetry:
+          type: object
+          additionalProperties: false
+          description: |
+            Diagnostic data reported by the scanner device
+          properties:
+            mem_free:
+              type: integer
+              format: int64
+              description: |
+                Free heap memory on the device, in bytes
+            wifi_rssi:
+              type: integer
+              format: int32
+              description: |
+                WiFi signal strength, in dBm
+            reset_cause:
+              type: string
+              description: |
+                The reason the device last reset/rebooted
+            wifi_ssid:
+              type: string
+              description: |
+                The SSID of the WiFi network the device is connected to
+        board_model:
+          type: string
+          description: |
+            The model of the microcontroller board the scanner device runs on
+        micropython_version:
+          type: string
+          description: |
+            The version of MicroPython running on the scanner device
+        serial_number:
+          type: string
+          description: |
+            The hardware serial number of the scanner device
 
     Heartbeat:
       description: |
@@ -284,3 +320,23 @@ components:
         uptime:
           type: integer
           format: int64
+        telemetry:
+          type: object
+          additionalProperties: false
+          properties:
+            mem_free:
+              type: integer
+              format: int64
+            wifi_rssi:
+              type: integer
+              format: int32
+            reset_cause:
+              type: string
+            wifi_ssid:
+              type: string
+        board_model:
+          type: string
+        micropython_version:
+          type: string
+        serial_number:
+          type: string
