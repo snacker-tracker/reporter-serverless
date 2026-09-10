@@ -26,7 +26,7 @@ jobs:
           terraform init -backend=false
           terraform validate
 
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: astral-sh/setup-uv@v10.1.0
 
       - name: Run ruff
         working-directory: functions/append-eventbridge-to-bronze
