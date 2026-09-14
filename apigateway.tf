@@ -163,7 +163,7 @@ resource "aws_api_gateway_usage_plan" "event_api" {
   }
 
   quota_settings {
-    limit  = 1000
+    limit  = 2000
     offset = 2
     period = "WEEK"
   }
