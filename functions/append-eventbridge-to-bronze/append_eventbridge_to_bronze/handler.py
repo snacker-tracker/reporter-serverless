@@ -192,7 +192,7 @@ def append_to_bronze(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
 def rebuild_bronze(event: dict[str, Any], context: Any) -> dict[str, Any]:
     handler = RebuildOrAppendToBronze(logging.getLogger(RebuildOrAppendToBronze.__name__))
-    raw_prefix = os.environ.get("RAW_PREFIX", "raw")
+    raw_prefix = os.environ.get("RAW_PREFIX", "raw/data/scanner/scans")
     return handler.rebuild([f"s3://{os.environ['BRONZE_BUCKET']}/{raw_prefix}/**/*"])
 
 def compact_bronze(event: dict[str, Any], context: Any) -> dict[str, Any]:

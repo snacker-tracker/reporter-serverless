@@ -297,7 +297,7 @@ class TestLambdaEntryPoints:
         ) as mock_rebuild:
             rebuild_bronze({}, {})
 
-        mock_rebuild.assert_called_once_with(["s3://some-bucket/raw/**/*"])
+        mock_rebuild.assert_called_once_with(["s3://some-bucket/raw/data/scanner/scans/**/*"])
 
     def test_compact_bronze_calls_compact(self, monkeypatch):
         monkeypatch.setenv("BRONZE_BUCKET", "some-bucket")
