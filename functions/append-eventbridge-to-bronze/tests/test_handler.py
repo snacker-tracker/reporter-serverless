@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 import pytest
 import polars as pl
@@ -11,6 +12,7 @@ from append_eventbridge_to_bronze.handler import (
     RebuildOrAppendToBronze,
     S3PutObjectParser,
     append_to_bronze,
+    compact_bronze,
     rebuild_bronze,
 )
 
@@ -236,6 +238,35 @@ class TestWriteToDeltaRealIO:
         assert pl.read_delta(table_path).shape == (1, 9)
 
 
+class TestCompactRealIO:
+    """Exercises the actual optimize+vacuum path against a local Delta table on disk."""
+
+    @staticmethod
+    def _count_parquet_files(path):
+        return sum(
+            1
+            for _, _, files in os.walk(path)
+            for f in files
+            if f.endswith(".parquet")
+        )
+
+    def test_compact_merges_small_files_without_losing_rows(self, tmp_path, monkeypatch):
+        handler = RebuildOrAppendToBronze(logging.getLogger("test"))
+        table_path = str(tmp_path / "bronze")
+        monkeypatch.setattr(RebuildOrAppendToBronze, "bronze_path", staticmethod(lambda: table_path))
+
+        for _ in range(5):
+            handler._write_to_delta(table_path, handler.cast(make_df(1)), "append")
+        assert self._count_parquet_files(table_path) == 5
+
+        result = handler.compact()
+
+        assert result["statusCode"] == 200
+        # old files are kept under the default retention window; only a new merged file is added
+        assert self._count_parquet_files(table_path) == 6
+        assert pl.read_delta(table_path).shape == (5, 9)
+
+
 class TestLambdaEntryPoints:
     def test_append_to_bronze_derives_transaction_id_from_message_id(self, monkeypatch):
         monkeypatch.setenv("BRONZE_BUCKET", "some-bucket")
@@ -267,3 +298,13 @@ class TestLambdaEntryPoints:
             rebuild_bronze({}, {})
 
         mock_rebuild.assert_called_once_with(["s3://some-bucket/raw/**/*"])
+
+    def test_compact_bronze_calls_compact(self, monkeypatch):
+        monkeypatch.setenv("BRONZE_BUCKET", "some-bucket")
+
+        with patch(
+            "append_eventbridge_to_bronze.handler.RebuildOrAppendToBronze.compact"
+        ) as mock_compact:
+            compact_bronze({}, {})
+
+        mock_compact.assert_called_once_with()

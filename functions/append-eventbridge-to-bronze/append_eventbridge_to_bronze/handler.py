@@ -133,10 +133,28 @@ class RebuildOrAppendToBronze:
             )
         )
 
-    def write(self, df: pl.DataFrame, mode: str, transaction_id: str | None = None) -> None:
+    @staticmethod
+    def bronze_path() -> str:
         prefix = os.environ.get("BRONZE_PREFIX", "bronze")
-        path = f"s3://{os.environ['BRONZE_BUCKET']}/{prefix}/"
-        self._write_to_delta(path, df, mode, transaction_id=transaction_id)
+        return f"s3://{os.environ['BRONZE_BUCKET']}/{prefix}/"
+
+    def write(self, df: pl.DataFrame, mode: str, transaction_id: str | None = None) -> None:
+        self._write_to_delta(self.bronze_path(), df, mode, transaction_id=transaction_id)
+
+    def compact(self) -> dict[str, Any]:
+        path = self.bronze_path()
+        table = DeltaTable(path)
+
+        optimize_result = table.optimize.compact()
+        self.logger.info(f"Compacted {path}: {optimize_result}")
+
+        removed_files = table.vacuum(dry_run=False)
+        self.logger.info(f"Vacuumed {path}, removed {len(removed_files)} file(s)")
+
+        return {
+            "statusCode": 200,
+            "body": {"path": path, "optimize": optimize_result, "vacuumed": len(removed_files)}
+        }
 
     def _write_to_delta(self, path: str, df: pl.DataFrame, mode: str, transaction_id: str | None = None) -> None:
         delta_write_options: dict[str, Any] = {}
@@ -176,3 +194,7 @@ def rebuild_bronze(event: dict[str, Any], context: Any) -> dict[str, Any]:
     handler = RebuildOrAppendToBronze(logging.getLogger(RebuildOrAppendToBronze.__name__))
     raw_prefix = os.environ.get("RAW_PREFIX", "raw")
     return handler.rebuild([f"s3://{os.environ['BRONZE_BUCKET']}/{raw_prefix}/**/*"])
+
+def compact_bronze(event: dict[str, Any], context: Any) -> dict[str, Any]:
+    handler = RebuildOrAppendToBronze(logging.getLogger(RebuildOrAppendToBronze.__name__))
+    return handler.compact()

@@ -122,6 +122,44 @@ resource "aws_lambda_function" "rebuild_bronze" {
   }
 }
 
+resource "aws_lambda_function" "compact_bronze" {
+  function_name = "${var.api_name}-compact-bronze-${terraform.workspace}"
+  role          = aws_iam_role.lambda_execution_role.arn
+  package_type  = "Image"
+  image_uri     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.region}.amazonaws.com/snacker-tracker-lambda/append-to-bronze:${var.version_label}"
+  timeout       = 900
+  memory_size   = 1024
+
+  image_config {
+    command = ["append_eventbridge_to_bronze.handler.compact_bronze"]
+  }
+
+  environment {
+    variables = {
+      BRONZE_BUCKET = aws_s3_bucket.firehose-destination.bucket
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "compact_bronze_schedule" {
+  name                = "${var.api_name}-compact-bronze-schedule-${terraform.workspace}"
+  description         = "Trigger bronze table compaction/vacuum once a day"
+  schedule_expression = "rate(1 day)"
+}
+
+resource "aws_cloudwatch_event_target" "compact_bronze_schedule" {
+  rule = aws_cloudwatch_event_rule.compact_bronze_schedule.name
+  arn  = aws_lambda_function.compact_bronze.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_compact_bronze" {
+  statement_id  = "AllowEventBridgeInvokeCompactBronze"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.compact_bronze.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.compact_bronze_schedule.arn
+}
+
 resource "aws_lambda_event_source_mapping" "sqs_to_append" {
   event_source_arn = aws_sqs_queue.s3_to_lambda.arn
   function_name    = aws_lambda_function.append_to_bronze.arn
