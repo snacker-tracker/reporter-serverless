@@ -17,7 +17,8 @@ resource "aws_api_gateway_rest_api" "api" {
 
 
 resource "aws_iam_role" "api_gateway_firehose_role" {
-  name = "${var.api_name}-api-gateway-firehose-role-${terraform.workspace}"
+  name                 = "${var.api_name}-api-gateway-firehose-role-${terraform.workspace}"
+  permissions_boundary = local.runtime_role_boundary_arn
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

@@ -1,5 +1,6 @@
 resource "aws_iam_role" "lambda_execution_role" {
-  name = "${var.api_name}-lambda-execution-${terraform.workspace}"
+  name                 = "${var.api_name}-lambda-execution-${terraform.workspace}"
+  permissions_boundary = local.runtime_role_boundary_arn
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

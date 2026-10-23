@@ -1,5 +1,6 @@
 resource "aws_iam_role" "firehose_role" {
-  name_prefix = "firehose-delivery-${terraform.workspace}"
+  name_prefix          = "firehose-delivery-${terraform.workspace}"
+  permissions_boundary = local.runtime_role_boundary_arn
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

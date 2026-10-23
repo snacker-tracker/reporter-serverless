@@ -25,7 +25,8 @@ resource "aws_cloudwatch_event_target" "firehose" {
 }
 
 resource "aws_iam_role" "eventbridge_delivery_role" {
-  name_prefix = "${var.api_name}-eb-delivery-${terraform.workspace}"
+  name_prefix          = "${var.api_name}-eb-delivery-${terraform.workspace}"
+  permissions_boundary = local.runtime_role_boundary_arn
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
