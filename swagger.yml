@@ -212,11 +212,15 @@ components:
     UPCCode:
       type: string
       format: upc
+      minLength: 1
+      maxLength: 64
       description: |
         UPC Code aka barcode
 
     ScannerLocation:
       type: string
+      minLength: 1
+      maxLength: 64
       description: |
         The ID or location of the barcode scanner
 
