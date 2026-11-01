@@ -283,6 +283,10 @@ components:
           type: string
           description: |
             The version of the application running on the scanner device
+        channel:
+          type: string
+          description: |
+            The OTA update channel the scanner device's application follows, e.g. "stable" or "beta"
 
     ScannerPlatformInfo:
       description: |
