@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.14 AS lambda
+FROM public.ecr.aws/lambda/python:3.15 AS lambda
 
 RUN pip install uv
 
