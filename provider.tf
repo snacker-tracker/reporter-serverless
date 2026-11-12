@@ -15,9 +15,11 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket = "snacker-tracker-aws-infra-tfstate"
-    key    = "snacker-tracker-reporter-serverless"
-    region = "ap-southeast-1"
+    bucket               = "lmacguire-terraform"
+    key                  = "terraform.tfstate"
+    workspace_key_prefix = "member-accounts/snacker-tracker/reporter-serverless"
+    region               = "ap-southeast-1"
+    use_lockfile         = true
   }
 }
 
