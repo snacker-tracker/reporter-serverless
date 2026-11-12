@@ -87,6 +87,8 @@ jobs:
     environment: dev
     needs:
       - build
+    env:
+      TF_WORKSPACE: dev
     steps:
       - uses: actions/checkout@v7
       - name: Configure AWS credentials
@@ -126,6 +128,8 @@ jobs:
     environment: prod
     needs:
       - deploy-dev
+    env:
+      TF_WORKSPACE: prod
     steps:
       - uses: actions/checkout@v7
       - name: Configure AWS credentials
