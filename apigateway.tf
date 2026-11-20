@@ -55,6 +55,36 @@ resource "aws_iam_role_policy" "api_gateway_firehose_policy" {
 }
 
 
+resource "aws_iam_role" "api_gateway_cloudwatch_role" {
+  name                 = "${var.api_name}-api-gateway-cloudwatch-role-${terraform.workspace}"
+  permissions_boundary = local.runtime_role_boundary_arn
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch_policy" {
+  role       = aws_iam_role.api_gateway_cloudwatch_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+}
+
+# Account-wide setting: the role API Gateway uses to write execution/access logs.
+resource "aws_api_gateway_account" "account" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_role.arn
+
+  depends_on = [aws_iam_role_policy_attachment.api_gateway_cloudwatch_policy]
+}
+
 resource "aws_api_gateway_deployment" "deployment" {
   triggers = {
     redeployment = sha1(jsonencode([
@@ -79,7 +109,42 @@ resource "aws_api_gateway_stage" "stage" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   stage_name    = terraform.workspace
 
-  depends_on = [aws_cloudwatch_log_group.api-gateway]
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
+    format = jsonencode({
+      requestId        = "$context.requestId"
+      ip               = "$context.identity.sourceIp"
+      requestTime      = "$context.requestTime"
+      httpMethod       = "$context.httpMethod"
+      resourcePath     = "$context.resourcePath"
+      status           = "$context.status"
+      protocol         = "$context.protocol"
+      responseLength   = "$context.responseLength"
+      integrationError = "$context.integrationErrorMessage"
+      errorMessage     = "$context.error.message"
+    })
+  }
+
+  depends_on = [
+    aws_cloudwatch_log_group.api-gateway,
+    aws_api_gateway_account.account,
+  ]
+}
+
+# Enables execution logging for every method on the stage. Writes go to the
+# "API-Gateway-Execution-Logs_<api-id>/<stage>" log group above, using the role
+# registered in aws_api_gateway_account.
+resource "aws_api_gateway_method_settings" "stage_execution_logging" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name  = aws_api_gateway_stage.stage.stage_name
+  method_path = "*/*"
+
+  settings {
+    logging_level      = "INFO"
+    data_trace_enabled = false
+  }
+
+  depends_on = [aws_api_gateway_account.account]
 }
 
 resource "aws_cloudwatch_log_group" "api_gateway_logs" {
