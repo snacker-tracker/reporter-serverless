@@ -103,7 +103,6 @@ jobs:
       - name: Apply
         run: |
           terraform init
-          terraform workspace select --or-create dev
           terraform apply --auto-approve --var version_label=${{ env.IMAGE_VERSION_MAJOR }}.${{ env.IMAGE_VERSION_MINOR }}.${{ github.run_number }} --var domain=reporter-dev.khanom.xyz
 
       # Tags the image `dev-<UTC time>`, so ECR lifecycle rules can keep it while it's among dev's
@@ -143,7 +142,6 @@ jobs:
       - name: Apply
         run: |
           terraform init
-          terraform workspace select --or-create prod
           terraform apply --auto-approve --var version_label=${{ env.IMAGE_VERSION_MAJOR }}.${{ env.IMAGE_VERSION_MINOR }}.${{ github.run_number }} --var domain=reporter.khanom.xyz
 
       # As in deploy-dev, under `prod-<UTC time>`.
