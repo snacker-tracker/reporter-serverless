@@ -70,7 +70,11 @@ jobs:
         # Tagged with the version, which terraform's version_label deploys, and the short commit
         # SHA, with OCI labels linking the image back to its commit and CI run.
         run: |
+          # Lambda rejects image indexes, which Docker wraps around the image when it attaches
+          # provenance/SBOM attestations, so turn those off to keep a single image manifest.
           docker build \
+            --provenance=false \
+            --sbom=false \
             --tag "$REGISTRY/$REPO:$VERSION" \
             --tag "$REGISTRY/$REPO:${GITHUB_SHA:0:7}" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
