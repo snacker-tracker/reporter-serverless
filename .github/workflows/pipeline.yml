@@ -9,7 +9,7 @@ permissions:
   id-token: write
 
 env:
-  # The image's version is MAJOR.MINOR.<this workflow's run number>; bump these by hand.
+  # The version is MAJOR.MINOR.<this workflow's run number>, applied as the provider's Version tag; bump these by hand.
   IMAGE_VERSION_MAJOR: 1
   IMAGE_VERSION_MINOR: 0
 
@@ -31,66 +31,11 @@ jobs:
           terraform init -backend=false
           terraform validate
 
-      - uses: astral-sh/setup-uv@v10.3.3
-        with:
-          python-version: "3.14"
-
-      - name: Run ruff
-        working-directory: functions/append-eventbridge-to-bronze
-        run: |
-          uv sync --all-groups
-          uv run ruff check
-
-      - name: Run tests
-        working-directory: functions/append-eventbridge-to-bronze
-        run: uv run pytest tests/ -v
-
-  build:
-    runs-on: ubuntu-latest
-    needs:
-      - test
-    steps:
-      - uses: actions/checkout@v7
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          aws-region: ap-southeast-1
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push Lambda image
-        working-directory: functions/append-eventbridge-to-bronze
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPO: snacker-tracker-lambda/append-to-bronze
-          VERSION: ${{ env.IMAGE_VERSION_MAJOR }}.${{ env.IMAGE_VERSION_MINOR }}.${{ github.run_number }}
-        # Tagged with the version, which terraform's version_label deploys, and the short commit
-        # SHA, with OCI labels linking the image back to its commit and CI run.
-        run: |
-          # Lambda rejects image indexes, which Docker wraps around the image when it attaches
-          # provenance/SBOM attestations, so turn those off to keep a single image manifest.
-          docker build \
-            --provenance=false \
-            --sbom=false \
-            --tag "$REGISTRY/$REPO:$VERSION" \
-            --tag "$REGISTRY/$REPO:${GITHUB_SHA:0:7}" \
-            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
-            --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
-            --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            --label "org.opencontainers.image.version=$VERSION" \
-            --label "xyz.khanom.build-url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
-            .
-          docker push "$REGISTRY/$REPO:$VERSION"
-          docker push "$REGISTRY/$REPO:${GITHUB_SHA:0:7}"
-
   deploy-dev:
     runs-on: ubuntu-latest
     environment: dev
     needs:
-      - build
+      - test
     env:
       TF_WORKSPACE: dev
     steps:
@@ -108,23 +53,6 @@ jobs:
         run: |
           terraform init
           terraform apply --auto-approve --var version_label=${{ env.IMAGE_VERSION_MAJOR }}.${{ env.IMAGE_VERSION_MINOR }}.${{ github.run_number }} --var domain=reporter-dev.khanom.xyz
-
-      # Tags the image `dev-<UTC time>`, so ECR lifecycle rules can keep it while it's among dev's
-      # latest deploys. The same manifest under a new tag, so the image itself never changes.
-      - name: Tag the deployed image
-        env:
-          ENVIRONMENT: dev
-          REPO: snacker-tracker-lambda/append-to-bronze
-          VERSION: ${{ env.IMAGE_VERSION_MAJOR }}.${{ env.IMAGE_VERSION_MINOR }}.${{ github.run_number }}
-        run: |
-          image() {
-            aws ecr batch-get-image --repository-name "$REPO" --image-ids imageTag="$VERSION" \
-              --query "images[0].$1" --output text
-          }
-          aws ecr put-image --repository-name "$REPO" \
-            --image-tag "$ENVIRONMENT-$(date -u +%Y%m%dT%H%M%SZ)" \
-            --image-manifest "$(image imageManifest)" --image-manifest-media-type "$(image imageManifestMediaType)" \
-            --query image.imageId.imageTag --output text
 
   deploy-prod:
     runs-on: ubuntu-latest
@@ -147,19 +75,3 @@ jobs:
         run: |
           terraform init
           terraform apply --auto-approve --var version_label=${{ env.IMAGE_VERSION_MAJOR }}.${{ env.IMAGE_VERSION_MINOR }}.${{ github.run_number }} --var domain=reporter.khanom.xyz
-
-      # As in deploy-dev, under `prod-<UTC time>`.
-      - name: Tag the deployed image
-        env:
-          ENVIRONMENT: prod
-          REPO: snacker-tracker-lambda/append-to-bronze
-          VERSION: ${{ env.IMAGE_VERSION_MAJOR }}.${{ env.IMAGE_VERSION_MINOR }}.${{ github.run_number }}
-        run: |
-          image() {
-            aws ecr batch-get-image --repository-name "$REPO" --image-ids imageTag="$VERSION" \
-              --query "images[0].$1" --output text
-          }
-          aws ecr put-image --repository-name "$REPO" \
-            --image-tag "$ENVIRONMENT-$(date -u +%Y%m%dT%H%M%SZ)" \
-            --image-manifest "$(image imageManifest)" --image-manifest-media-type "$(image imageManifestMediaType)" \
-            --query image.imageId.imageTag --output text
