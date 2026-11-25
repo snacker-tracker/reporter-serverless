@@ -69,6 +69,16 @@ resource "aws_s3_bucket" "firehose-destination" {
   force_destroy = true
 }
 
+resource "aws_cloudwatch_log_group" "firehose" {
+  name              = "/aws/kinesisfirehose/${var.api_name}-${terraform.workspace}"
+  retention_in_days = 30
+}
+
+resource "aws_cloudwatch_log_stream" "firehose_s3_delivery" {
+  name           = "S3Delivery"
+  log_group_name = aws_cloudwatch_log_group.firehose.name
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "firehose" {
   name        = "${var.api_name}-${terraform.workspace}"
   destination = "extended_s3"
@@ -80,6 +90,12 @@ resource "aws_kinesis_firehose_delivery_stream" "firehose" {
     buffering_size      = 64
     prefix              = "raw/data/!{partitionKeyFromQuery:source}/!{partitionKeyFromQuery:detailType}/!{timestamp:yyyy}/!{timestamp:MM}/!{timestamp:dd}/"
     error_output_prefix = "raw/errors/!{firehose:error-output-type}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/"
+
+    cloudwatch_logging_options {
+      enabled         = true
+      log_group_name  = aws_cloudwatch_log_group.firehose.name
+      log_stream_name = aws_cloudwatch_log_stream.firehose_s3_delivery.name
+    }
 
     dynamic_partitioning_configuration {
       enabled = true
